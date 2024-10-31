@@ -1,6 +1,8 @@
 package com.example.unitconversion
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
@@ -23,6 +25,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var input_field: EditText
     private lateinit var output_field: TextView
     private lateinit var radio_group: RadioGroup
+    private lateinit var conversion: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,11 +49,22 @@ class MainActivity : AppCompatActivity() {
         radio_group.setOnCheckedChangeListener {_, checkedId->check_radio()}
         input_spinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-                val (value1, value2) = get_spinner_val()
-                Toast.makeText(this@MainActivity, "Spinner 1: $value1, Spinner 2: $value2", Toast.LENGTH_SHORT).show()
+                check_values()
             }
-            override fun onNothingSelected(parent: AdapterView<*>) {
-                // Do nothing
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        })
+        output_spinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                check_values()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        })
+
+        input_field.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                check_values()
             }
         })
 
@@ -61,9 +75,11 @@ class MainActivity : AppCompatActivity() {
     private fun check_radio() {
         if (radio_group.checkedRadioButtonId == R.id.length_radio) {
             update_spinner(length_units)
+            conversion = "length"
         }
         else if (radio_group.checkedRadioButtonId == R.id.temperature_radio) {
             update_spinner(temperature_units)
+            conversion = "temperature"
         }
     }
 
@@ -82,5 +98,48 @@ class MainActivity : AppCompatActivity() {
         val val1 = input_spinner.selectedItem as? String
         val val2 = output_spinner.selectedItem as? String
         return Pair(val1, val2)
+    }
+
+
+    private fun check_values() {
+        val (input_unit, output_unit) = get_spinner_val()
+        val input_data = input_field.text.toString().toFloatOrNull()
+//        Toast.makeText(this@MainActivity, "Spinner 1: $value1, Spinner 2: $value2, DATA: $input_data", Toast.LENGTH_SHORT).show()
+        var output_data: Float = 0.0F
+
+        if (conversion == "length") {
+            output_data = convert_length(input_data, input_unit, output_unit)
+        }
+        else if (conversion == "temperature") {
+            output_data = convert_temperature(input_data, input_unit, output_unit)
+        }
+
+
+        output_field.text = String.format("%.7f", output_data)
+    }
+
+
+    private fun convert_length(input_data: Float?, input_unit: String?, output_unit: String?): Float {
+        var length_obj = input_data?.let { Length(this@MainActivity, it, input_unit) }
+        var output_data = 0.0F
+
+        if (length_obj != null) {
+            output_data = when (output_unit) {
+                "km" -> length_obj.to_km()
+                "cm" -> length_obj.to_cm()
+                "Inch" -> length_obj.to_inches()
+                "Feet" -> length_obj.to_feet()
+                else -> length_obj.value_meters
+            }
+        }
+        return output_data
+    }
+
+
+    private fun convert_temperature(input_data: Float?, input_unit: String?, output_unit: String?): Float {
+        var output_data = 0.0F
+        if (input_unit == "Centigrade") {}
+        else if (input_unit == "Fahrenheit") {}
+        return output_data
     }
 }
