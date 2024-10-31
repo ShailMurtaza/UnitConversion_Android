@@ -104,8 +104,7 @@ class MainActivity : AppCompatActivity() {
     private fun check_values() {
         val (input_unit, output_unit) = get_spinner_val()
         val input_data = input_field.text.toString().toFloatOrNull()
-//        Toast.makeText(this@MainActivity, "Spinner 1: $value1, Spinner 2: $value2, DATA: $input_data", Toast.LENGTH_SHORT).show()
-        var output_data: Float = 0.0F
+        var output_data: Float? = 0.0F
 
         if (conversion == "length") {
             output_data = convert_length(input_data, input_unit, output_unit)
@@ -113,15 +112,13 @@ class MainActivity : AppCompatActivity() {
         else if (conversion == "temperature") {
             output_data = convert_temperature(input_data, input_unit, output_unit)
         }
-
-
         output_field.text = String.format("%.7f", output_data)
     }
 
 
-    private fun convert_length(input_data: Float?, input_unit: String?, output_unit: String?): Float {
-        var length_obj = input_data?.let { Length(this@MainActivity, it, input_unit) }
-        var output_data = 0.0F
+    private fun convert_length(input_data: Float?, input_unit: String?, output_unit: String?): Float? {
+        val length_obj = input_data?.let { Length(this@MainActivity, it, input_unit) }
+        var output_data = input_data
 
         if (length_obj != null) {
             output_data = when (output_unit) {
@@ -136,10 +133,18 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun convert_temperature(input_data: Float?, input_unit: String?, output_unit: String?): Float {
-        var output_data = 0.0F
-        if (input_unit == "Centigrade") {}
-        else if (input_unit == "Fahrenheit") {}
+    private fun convert_temperature(input_data: Float?, input_unit: String?, output_unit: String?): Float? {
+        var output_data = input_data
+        if (input_unit == "Centigrade" && output_unit == "Fahrenheit") {
+            if (input_data != null) {
+                output_data = (input_data * 9/5) + 32
+            }
+        }
+        else if (input_unit == "Fahrenheit" && output_unit == "Centigrade") {
+            if (input_data != null) {
+                output_data = (input_data - 32) * 5/9
+            }
+        }
         return output_data
     }
 }
